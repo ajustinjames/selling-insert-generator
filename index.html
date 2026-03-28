@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Selling Insert Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body data-view="main">
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <span class="brand-icon">▣</span>
+        <span class="brand-name">SELLING INSERT GEN</span>
+      </div>
+      <nav class="header-nav">
+        <button class="nav-btn active" data-nav="main">GENERATOR</button>
+        <button class="nav-btn" data-nav="settings">SETTINGS</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── MAIN VIEW ─────────────────────────────────────────────── -->
+  <section id="view-main" class="view">
+    <div class="main-layout">
+
+      <div class="form-panel">
+        <div class="panel-label">ITEM DETAILS</div>
+
+        <div class="field-group">
+          <label class="field-label" for="item_name">
+            ITEM NAME <span class="required">*</span>
+          </label>
+          <input
+            id="item_name"
+            type="text"
+            class="field-input"
+            placeholder="e.g. Vintage Camera Strap"
+            maxlength="80"
+            autocomplete="off"
+          />
+          <div class="field-counter"><span id="item_name_count">0</span>/80</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="order_number">ORDER NUMBER</label>
+          <input
+            id="order_number"
+            type="text"
+            class="field-input"
+            placeholder="Optional"
+            maxlength="60"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="buyer_name">BUYER NAME</label>
+          <input
+            id="buyer_name"
+            type="text"
+            class="field-input"
+            placeholder="Optional"
+            maxlength="60"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="custom_note">CUSTOM NOTE</label>
+          <input
+            id="custom_note"
+            type="text"
+            class="field-input"
+            placeholder="Optional"
+            maxlength="60"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="action-row">
+          <button id="print-btn" class="btn-primary" disabled>
+            <span class="btn-icon">⎙</span>
+            PRINT
+          </button>
+          <button id="download-btn" class="btn-secondary action-row-download" disabled>
+            <span class="btn-icon">⬇</span>
+            DOWNLOAD PDF
+          </button>
+        </div>
+
+        <div id="download-error" class="field-error" hidden></div>
+      </div>
+
+      <div class="preview-panel">
+        <div class="panel-label">LIVE PREVIEW</div>
+        <div class="preview-slot">
+          <div class="preview-feed-top"></div>
+          <div id="preview-container" class="preview-insert"></div>
+          <div class="preview-feed-bottom"></div>
+        </div>
+        <div class="preview-note">Preview is approximate — PDF output is authoritative</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SETTINGS VIEW ─────────────────────────────────────────── -->
+  <section id="view-settings" class="view">
+    <div class="settings-layout">
+
+      <div class="settings-header">
+        <div class="panel-label">STORE CONFIGURATION</div>
+        <div class="settings-actions">
+          <button id="reset-btn" class="btn-secondary">RESET TO DEFAULTS</button>
+          <button id="save-btn" class="btn-primary">SAVE SETTINGS</button>
+        </div>
+      </div>
+
+      <div id="save-feedback" class="save-feedback" hidden></div>
+
+      <!-- Store Identity -->
+      <fieldset class="settings-section">
+        <legend class="section-legend">STORE IDENTITY</legend>
+
+        <div class="field-group">
+          <label class="field-label" for="s_store_name">STORE NAME</label>
+          <input id="s_store_name" type="text" class="field-input" maxlength="60" />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="s_platform">PLATFORM</label>
+          <div class="select-wrap">
+            <select id="s_platform" class="field-select">
+              <option value="eBay">eBay</option>
+              <option value="Etsy">Etsy</option>
+              <option value="Mercari">Mercari</option>
+              <option value="Poshmark">Poshmark</option>
+              <option value="Amazon">Amazon</option>
+              <option value="Facebook Marketplace">Facebook Marketplace</option>
+              <option value="Other">Other…</option>
+            </select>
+          </div>
+          <input id="s_platform_other" type="text" class="field-input mt-sm" placeholder="Enter platform name" hidden />
+        </div>
+      </fieldset>
+
+      <!-- Logo -->
+      <fieldset class="settings-section">
+        <legend class="section-legend">LOGO</legend>
+        <div class="logo-area">
+          <div id="logo-preview-wrap" class="logo-preview-wrap" hidden>
+            <img id="logo-preview-img" class="logo-preview-img" alt="Logo preview" />
+            <button id="logo-remove-btn" class="btn-ghost btn-sm">✕ REMOVE</button>
+          </div>
+          <div id="logo-upload-area" class="logo-upload-area">
+            <label for="logo-input" class="logo-upload-label">
+              <span class="upload-icon">⊕</span>
+              <span>UPLOAD LOGO</span>
+              <span class="upload-hint">PNG or JPG · max 500 KB</span>
+            </label>
+            <input id="logo-input" type="file" accept="image/png,image/jpeg" hidden />
+          </div>
+          <div id="logo-error" class="field-error" hidden></div>
+        </div>
+        <p class="field-hint">Logo is displayed inside a circle. For best results, use a transparent-background PNG.</p>
+      </fieldset>
+
+      <!-- Taglines -->
+      <fieldset class="settings-section">
+        <legend class="section-legend">TAGLINES <span class="legend-hint">(max 4)</span></legend>
+        <div id="taglines-list" class="dynamic-list"></div>
+        <button id="add-tagline-btn" class="btn-ghost btn-sm mt-sm">+ ADD TAGLINE</button>
+      </fieldset>
+
+      <!-- Footer Lines -->
+      <fieldset class="settings-section">
+        <legend class="section-legend">FOOTER LINES <span class="legend-hint">(max 3)</span></legend>
+        <p class="field-hint">Use <code class="token">{platform}</code> to insert the platform name dynamically.</p>
+        <div id="footer-list" class="dynamic-list"></div>
+        <button id="add-footer-btn" class="btn-ghost btn-sm mt-sm">+ ADD FOOTER LINE</button>
+      </fieldset>
+
+      <!-- Colors -->
+      <fieldset class="settings-section">
+        <legend class="section-legend">COLORS</legend>
+        <div class="color-grid">
+          <div class="color-field">
+            <label class="field-label" for="c_store_name">STORE NAME</label>
+            <div class="color-row">
+              <input id="c_store_name" type="color" class="color-picker" data-color-key="store_name" />
+              <input id="c_store_name_hex" type="text" class="color-hex" maxlength="7" data-color-key="store_name" />
+            </div>
+            <div class="thermal-warn" id="warn_store_name" hidden>⚠ May be too light for thermal</div>
+          </div>
+          <div class="color-field">
+            <label class="field-label" for="c_item_label">ITEM LABEL</label>
+            <div class="color-row">
+              <input id="c_item_label" type="color" class="color-picker" data-color-key="item_label" />
+              <input id="c_item_label_hex" type="text" class="color-hex" maxlength="7" data-color-key="item_label" />
+            </div>
+            <div class="thermal-warn" id="warn_item_label" hidden>⚠ May be too light for thermal</div>
+          </div>
+          <div class="color-field">
+            <label class="field-label" for="c_tagline">TAGLINE</label>
+            <div class="color-row">
+              <input id="c_tagline" type="color" class="color-picker" data-color-key="tagline" />
+              <input id="c_tagline_hex" type="text" class="color-hex" maxlength="7" data-color-key="tagline" />
+            </div>
+            <div class="thermal-warn" id="warn_tagline" hidden>⚠ May be too light for thermal</div>
+          </div>
+          <div class="color-field">
+            <label class="field-label" for="c_footer">FOOTER</label>
+            <div class="color-row">
+              <input id="c_footer" type="color" class="color-picker" data-color-key="footer" />
+              <input id="c_footer_hex" type="text" class="color-hex" maxlength="7" data-color-key="footer" />
+            </div>
+            <div class="thermal-warn" id="warn_footer" hidden>⚠ May be too light for thermal</div>
+          </div>
+          <div class="color-field">
+            <label class="field-label" for="c_border">BORDER</label>
+            <div class="color-row">
+              <input id="c_border" type="color" class="color-picker" data-color-key="border" />
+              <input id="c_border_hex" type="text" class="color-hex" maxlength="7" data-color-key="border" />
+            </div>
+          </div>
+          <div class="color-field">
+            <label class="field-label" for="c_divider">DIVIDER</label>
+            <div class="color-row">
+              <input id="c_divider" type="color" class="color-picker" data-color-key="divider" />
+              <input id="c_divider_hex" type="text" class="color-hex" maxlength="7" data-color-key="divider" />
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Page Size -->
+      <fieldset class="settings-section">
+        <legend class="section-legend">PAGE SIZE</legend>
+        <div class="page-size-row">
+          <div class="field-group">
+            <label class="field-label" for="s_width">WIDTH (inches)</label>
+            <input id="s_width" type="number" class="field-input field-narrow" min="2" max="8" step="0.5" value="4" />
+          </div>
+          <span class="page-size-sep">×</span>
+          <div class="field-group">
+            <label class="field-label" for="s_height">HEIGHT (inches)</label>
+            <input id="s_height" type="number" class="field-input field-narrow" min="2" max="8" step="0.5" value="6" />
+          </div>
+        </div>
+      </fieldset>
+
+    </div>
+  </section>
+
+  <footer class="app-footer">
+    <div class="footer-inner">
+      Built with <a href="https://claude.ai/code" class="footer-link" target="_blank" rel="noopener">Claude</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/ajustinjames/selling-insert-generator" class="footer-link" target="_blank" rel="noopener">View source</a>
+    </div>
+  </footer>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
