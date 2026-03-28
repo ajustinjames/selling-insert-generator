@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Insert Generator</title>
+  <title>Selling Insert Generator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -15,8 +15,7 @@
     <div class="header-inner">
       <div class="header-brand">
         <span class="brand-icon">▣</span>
-        <span class="brand-name">INSERT GEN</span>
-        <span class="brand-version">v1</span>
+        <span class="brand-name">SELLING INSERT GEN</span>
       </div>
       <nav class="header-nav">
         <button class="nav-btn active" data-nav="main">GENERATOR</button>
@@ -83,10 +82,16 @@
           />
         </div>
 
-        <button id="download-btn" class="btn-primary" disabled>
-          <span class="btn-icon">⬇</span>
-          DOWNLOAD PDF
-        </button>
+        <div class="action-row">
+          <button id="print-btn" class="btn-primary" disabled>
+            <span class="btn-icon">⎙</span>
+            PRINT
+          </button>
+          <button id="download-btn" class="btn-secondary action-row-download" disabled>
+            <span class="btn-icon">⬇</span>
+            DOWNLOAD PDF
+          </button>
+        </div>
 
         <div id="download-error" class="field-error" hidden></div>
       </div>
@@ -251,6 +256,14 @@
 
     </div>
   </section>
+
+  <footer class="app-footer">
+    <div class="footer-inner">
+      Built with <a href="https://claude.ai/code" class="footer-link" target="_blank" rel="noopener">Claude</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/ajustinjames/selling-insert-generator" class="footer-link" target="_blank" rel="noopener">View source</a>
+    </div>
+  </footer>
 
   <script type="module" src="./src/app.js"></script>
 </body>

@@ -11,6 +11,10 @@ function pct(ptVal, dimension) {
   return `${(ptVal / dimension) * 100}%`;
 }
 
+function cqh(ptVal, dimension) {
+  return `${(ptVal / dimension) * 100}cqh`;
+}
+
 function replacePlatform(text, platform) {
   return text.replaceAll('{platform}', platform);
 }
@@ -42,6 +46,7 @@ export function renderPreview(container, config, formData, logoDataUrl) {
   const MARGIN = 21.6;
   const BORDER_INSET = 10.8;
   const CIRCLE_R = 46.8; // 0.65in * 72
+  const RULE_Y = BORDER_INSET + 0.55 * 72; // 50.4
 
   // ── Border ──────────────────────────────────────────────────
   const border = el('div', 'pi-border', {
@@ -85,94 +90,80 @@ export function renderPreview(container, config, formData, logoDataUrl) {
   }
 
   // ── Store name ───────────────────────────────────────────────
-  const storeEl = el('div', 'pi-text', {
+  container.appendChild(el('div', 'pi-text', {
     left: '6%',
     right: '6%',
     top: pdfYtoTopPct(contentStartY, PAGE_H, 11),
     textAlign: 'center',
-    fontSize: pct(11, PAGE_H),
+    fontSize: cqh(11, PAGE_H),
     fontWeight: '400',
     color: config.colors.store_name,
-  }, config.store_name);
-  container.appendChild(storeEl);
+  }, config.store_name));
 
-  // ── ITEM label ───────────────────────────────────────────────
+  // ── Flow content container (ITEM label → taglines) ───────────
+  // Uses flexbox so wrapped text pushes subsequent items down naturally.
   const item_y = contentStartY - 0.48 * 72;
-  const itemLabelEl = el('div', 'pi-text', {
+
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'pi-content';
+  Object.assign(contentDiv.style, {
+    top: pdfYtoTopPct(item_y, PAGE_H, 0),
+    bottom: pct(RULE_Y + 8, PAGE_H),
     left: pct(MARGIN, PAGE_W),
-    top: pdfYtoTopPct(item_y, PAGE_H, 10),
-    fontSize: pct(10, PAGE_H),
+    right: pct(MARGIN, PAGE_W),
+  });
+
+  // ITEM label
+  contentDiv.appendChild(el('div', 'pi-flow-text', {
+    fontSize: cqh(10, PAGE_H),
     fontWeight: '700',
     color: config.colors.item_label,
-  }, 'ITEM');
-  container.appendChild(itemLabelEl);
+  }, 'ITEM'));
 
-  // ── Item name ────────────────────────────────────────────────
-  const itemNameY = item_y - 0.27 * 72;
-  const itemNameEl = el('div', 'pi-text', {
-    left: pct(MARGIN, PAGE_W),
-    top: pdfYtoTopPct(itemNameY, PAGE_H, 13),
-    fontSize: pct(13, PAGE_H),
+  // Item name
+  contentDiv.appendChild(el('div', 'pi-flow-text pi-item-name', {
+    fontSize: cqh(13, PAGE_H),
     fontWeight: '700',
     color: formData.item_name ? '#1a1410' : '#bbb',
-  }, formData.item_name || 'Item name\u2026');
-  container.appendChild(itemNameEl);
+  }, formData.item_name || 'Item name\u2026'));
 
-  // ── Optional fields ──────────────────────────────────────────
-  let optY = itemNameY - 14.4;
-  const optSpacing = 14.4;
-
+  // Optional fields
   if (formData.order_number) {
-    container.appendChild(el('div', 'pi-text', {
-      left: pct(MARGIN, PAGE_W),
-      top: pdfYtoTopPct(optY, PAGE_H, 9),
-      fontSize: pct(9, PAGE_H),
+    contentDiv.appendChild(el('div', 'pi-flow-text', {
+      fontSize: cqh(9, PAGE_H),
       color: config.colors.item_label,
     }, `ORDER: ${formData.order_number}`));
-    optY -= optSpacing;
   }
   if (formData.buyer_name) {
-    container.appendChild(el('div', 'pi-text', {
-      left: pct(MARGIN, PAGE_W),
-      top: pdfYtoTopPct(optY, PAGE_H, 9),
-      fontSize: pct(9, PAGE_H),
+    contentDiv.appendChild(el('div', 'pi-flow-text', {
+      fontSize: cqh(9, PAGE_H),
       color: config.colors.item_label,
     }, `BUYER: ${formData.buyer_name}`));
-    optY -= optSpacing;
   }
   if (formData.custom_note) {
-    container.appendChild(el('div', 'pi-text', {
-      left: pct(MARGIN, PAGE_W),
-      top: pdfYtoTopPct(optY, PAGE_H, 9),
-      fontSize: pct(9, PAGE_H),
+    contentDiv.appendChild(el('div', 'pi-flow-text', {
+      fontSize: cqh(9, PAGE_H),
       color: config.colors.item_label,
     }, formData.custom_note));
   }
 
-  // ── Taglines ─────────────────────────────────────────────────
-  const optCount = [formData.order_number, formData.buyer_name, formData.custom_note].filter(Boolean).length;
-  let tagY = itemNameY - 0.27 * 72 - optCount * optSpacing;
-  const tagSpacing = 12.96;
-
+  // Taglines
   for (const tagline of config.taglines) {
-    container.appendChild(el('div', 'pi-text', {
-      left: pct(MARGIN, PAGE_W),
-      top: pdfYtoTopPct(tagY, PAGE_H, 10),
-      fontSize: pct(10, PAGE_H),
+    contentDiv.appendChild(el('div', 'pi-flow-text pi-tagline', {
+      fontSize: cqh(10, PAGE_H),
       fontWeight: '700',
       color: config.colors.tagline,
     }, tagline));
-    tagY -= tagSpacing;
   }
 
+  container.appendChild(contentDiv);
+
   // ── Divider rule ─────────────────────────────────────────────
-  const rule_y = BORDER_INSET + 0.55 * 72; // 50.4
-  const divider = el('div', 'pi-line', {
-    top: pdfYtoTopPct(rule_y, PAGE_H, 0),
+  container.appendChild(el('div', 'pi-line', {
+    top: pdfYtoTopPct(RULE_Y, PAGE_H, 0),
     borderTopWidth: '1px',
     borderTopColor: config.colors.divider,
-  });
-  container.appendChild(divider);
+  }));
 
   // ── Footer lines ─────────────────────────────────────────────
   const footerBaseY = BORDER_INSET + 0.38 * 72; // 38.16
@@ -187,7 +178,7 @@ export function renderPreview(container, config, formData, logoDataUrl) {
       right: '6%',
       top: pdfYtoTopPct(footerBaseY - i * footerSpacing, PAGE_H, 8.5),
       textAlign: 'center',
-      fontSize: pct(8.5, PAGE_H),
+      fontSize: cqh(8.5, PAGE_H),
       color: config.colors.footer,
     }, footerLines[i]));
   }

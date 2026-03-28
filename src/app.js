@@ -27,13 +27,18 @@ function getFormData() {
 
 function updatePreview() {
   const container = document.getElementById('preview-container');
-  renderPreview(container, config, getFormData(), logoDataUrl);
+  if (!container) return;
+  try {
+    renderPreview(container, config, getFormData(), logoDataUrl);
+  } catch (err) {
+    console.error('Preview render failed:', err);
+  }
 }
 
 function updateDownloadBtn() {
-  const btn = document.getElementById('download-btn');
   const val = document.getElementById('item_name').value.trim();
-  btn.disabled = val.length === 0;
+  document.getElementById('download-btn').disabled = val.length === 0;
+  document.getElementById('print-btn').disabled = val.length === 0;
 }
 
 // ── View switching ────────────────────────────────────────────────
@@ -84,6 +89,40 @@ document.getElementById('download-btn').addEventListener('click', async () => {
   } finally {
     btn.disabled = false;
     btn.textContent = '⬇ DOWNLOAD PDF';
+    updateDownloadBtn();
+  }
+});
+
+document.getElementById('print-btn').addEventListener('click', async () => {
+  const formData = getFormData();
+  const errEl = document.getElementById('download-error');
+  errEl.hidden = true;
+
+  const btn = document.getElementById('print-btn');
+  btn.disabled = true;
+  btn.textContent = 'GENERATING…';
+
+  try {
+    const pdfBytes = await generateInsertPdf(config, formData, logoDataUrl);
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url);
+    if (win) {
+      win.addEventListener('load', () => {
+        win.print();
+        URL.revokeObjectURL(url);
+      });
+    } else {
+      // Fallback if popup blocked: trigger download instead
+      triggerDownload(pdfBytes, `insert_${formData.item_name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+      URL.revokeObjectURL(url);
+    }
+  } catch (err) {
+    errEl.textContent = `Error: ${err.message}`;
+    errEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⎙ PRINT';
     updateDownloadBtn();
   }
 });
