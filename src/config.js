@@ -76,12 +76,15 @@ export function loadConfig() {
     if (!raw) return { ...DEFAULT_CONFIG };
     const saved = JSON.parse(raw);
     // Deep merge with defaults to handle schema evolution
-    return {
+    const merged = {
       ...DEFAULT_CONFIG,
       ...saved,
       colors: { ...DEFAULT_CONFIG.colors, ...saved.colors },
       page: { ...DEFAULT_CONFIG.page, ...saved.page },
     };
+    // Validate merged config to guard against tampered localStorage values
+    const { valid } = validateConfig(merged);
+    return valid ? merged : { ...DEFAULT_CONFIG };
   } catch {
     return { ...DEFAULT_CONFIG };
   }

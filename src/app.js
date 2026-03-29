@@ -6,7 +6,6 @@ import {
   getLogoDataUrl,
   saveLogoDataUrl,
   removeLogo,
-  DEFAULT_CONFIG,
 } from './config.js';
 import { renderPreview } from './preview.js';
 import { generateInsertPdf, triggerDownload } from './pdf-generator.js';
