@@ -241,7 +241,7 @@ Single-column, max-width ~720px.
 | Output directory | `dist` |
 | Environment variables | None |
 
-`vite.config.js` sets `base: './'` — required for relative asset paths on Cloudflare Pages.
+`vite.config.js` sets `base: '/'` so deployments served from `/projects/` load shared built assets from `/assets/...`.
 
 ### Local development
 
