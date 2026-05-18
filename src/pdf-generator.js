@@ -11,6 +11,46 @@ function replacePlatform(text, platform) {
   return text.replaceAll('{platform}', platform);
 }
 
+function wrapTextLines(text, font, size, maxWidth) {
+  if (!text) return [''];
+
+  const lines = [];
+  const words = text.split(/\s+/).filter(Boolean);
+
+  for (const word of words) {
+    const current = lines.at(-1);
+    const candidate = current ? `${current} ${word}` : word;
+
+    if (!current || font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      if (current) {
+        lines[lines.length - 1] = candidate;
+      } else {
+        lines.push(candidate);
+      }
+      continue;
+    }
+
+    if (font.widthOfTextAtSize(word, size) <= maxWidth) {
+      lines.push(word);
+      continue;
+    }
+
+    let segment = '';
+    for (const char of word) {
+      const nextSegment = `${segment}${char}`;
+      if (segment && font.widthOfTextAtSize(nextSegment, size) > maxWidth) {
+        lines.push(segment);
+        segment = char;
+      } else {
+        segment = nextSegment;
+      }
+    }
+    if (segment) lines.push(segment);
+  }
+
+  return lines.length ? lines : [''];
+}
+
 async function embedLogoImage(pdfDoc, dataUrl) {
   const [header, base64] = dataUrl.split(',');
   const binary = atob(base64);
@@ -112,16 +152,28 @@ export async function generateInsertPdf(config, formData, logoDataUrl) {
 
   // 5. Item name (Courier-Bold 13pt, left)
   const itemNameY = item_y - 0.27 * PT;
-  page.drawText(formData.item_name || '', {
-    x: MARGIN,
-    y: itemNameY,
-    size: 13,
-    font: courierBold,
-    color: rgb(0, 0, 0),
-  });
+  const itemNameSize = 13;
+  const itemNameLineHeight = itemNameSize * 1.3;
+  const itemNameLines = wrapTextLines(
+    formData.item_name || '',
+    courierBold,
+    itemNameSize,
+    PAGE_W - 2 * MARGIN
+  );
+
+  for (let i = 0; i < itemNameLines.length; i++) {
+    page.drawText(itemNameLines[i], {
+      x: MARGIN,
+      y: itemNameY - i * itemNameLineHeight,
+      size: itemNameSize,
+      font: courierBold,
+      color: rgb(0, 0, 0),
+    });
+  }
 
   // 6. Optional fields (Courier 9pt, left)
-  let optY = itemNameY - 14.4;
+  const itemNameLastLineY = itemNameY - (itemNameLines.length - 1) * itemNameLineHeight;
+  let optY = itemNameLastLineY - 14.4;
   const optSpacing = 14.4;
 
   if (formData.order_number) {
@@ -150,7 +202,7 @@ export async function generateInsertPdf(config, formData, logoDataUrl) {
 
   // 7. Taglines (Courier-Bold 10pt, left) — rendered below optional fields
   // Start taglines after item name + optional fields area
-  const taglineStartY = itemNameY - 0.27 * PT;
+  const taglineStartY = itemNameLastLineY - 0.27 * PT;
   const optCount = [formData.order_number, formData.buyer_name, formData.custom_note].filter(Boolean).length;
   let tagY = taglineStartY - optCount * optSpacing;
   const tagSpacing = 12.96;
