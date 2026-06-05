@@ -1,3 +1,8 @@
+import '@ajustinjames/hardline-tokens/css';
+import '@ajustinjames/hardline-tokens/css-dark';
+import '@ajustinjames/hardline-components';
+import { createElement, Moon, Sun } from 'lucide';
+
 import {
   loadConfig,
   saveConfig,
@@ -13,8 +18,30 @@ import { generateInsertPdf, triggerDownload } from './pdf-generator.js';
 // ── State ────────────────────────────────────────────────────────
 let config = loadConfig();
 let logoDataUrl = getLogoDataUrl();
+const THEME_STORAGE_KEY = 'insertgen_theme';
 
 // ── Helpers ──────────────────────────────────────────────────────
+function getStoredTheme() {
+  return localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const toggle = document.getElementById('theme-toggle');
+  if (!toggle) return;
+  const isDark = theme === 'dark';
+  const iconSlot = toggle.querySelector('.theme-toggle-icon');
+  toggle.setAttribute('aria-pressed', String(isDark));
+  toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  iconSlot.replaceChildren(createElement(isDark ? Sun : Moon, {
+    'aria-hidden': 'true',
+    width: 16,
+    height: 16,
+    stroke: 'currentColor',
+    'stroke-width': 2,
+  }));
+}
+
 function getFormData() {
   return {
     item_name: document.getElementById('item_name').value.trim(),
@@ -34,10 +61,26 @@ function updatePreview() {
   }
 }
 
+function setButtonDisabled(btnOrId, disabled) {
+  const btn = typeof btnOrId === 'string' ? document.getElementById(btnOrId) : btnOrId;
+  if (!btn) return;
+  btn.disabled = disabled;
+  btn.closest('hl-btn')?.toggleAttribute('disabled', disabled);
+}
+
+function setButtonLabel(btn, label) {
+  const labelEl = btn.querySelector('.btn-label');
+  if (labelEl) {
+    labelEl.textContent = label;
+  } else {
+    btn.textContent = label;
+  }
+}
+
 function updateDownloadBtn() {
   const val = document.getElementById('item_name').value.trim();
-  document.getElementById('download-btn').disabled = val.length === 0;
-  document.getElementById('print-btn').disabled = val.length === 0;
+  setButtonDisabled('download-btn', val.length === 0);
+  setButtonDisabled('print-btn', val.length === 0);
 }
 
 // ── View switching ────────────────────────────────────────────────
@@ -50,6 +93,12 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 
     if (view === 'settings') populateSettingsForm();
   });
+});
+
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  applyTheme(nextTheme);
 });
 
 // ── Main page ─────────────────────────────────────────────────────
@@ -75,8 +124,8 @@ document.getElementById('download-btn').addEventListener('click', async () => {
   }
 
   const btn = document.getElementById('download-btn');
-  btn.disabled = true;
-  btn.textContent = 'GENERATING…';
+  setButtonDisabled(btn, true);
+  setButtonLabel(btn, 'GENERATING...');
 
   try {
     const pdfBytes = await generateInsertPdf(config, formData, logoDataUrl);
@@ -86,8 +135,8 @@ document.getElementById('download-btn').addEventListener('click', async () => {
     errEl.textContent = `Error: ${err.message}`;
     errEl.hidden = false;
   } finally {
-    btn.disabled = false;
-    btn.textContent = '⬇ DOWNLOAD PDF';
+    setButtonDisabled(btn, false);
+    setButtonLabel(btn, 'DOWNLOAD PDF');
     updateDownloadBtn();
   }
 });
@@ -98,8 +147,8 @@ document.getElementById('print-btn').addEventListener('click', async () => {
   errEl.hidden = true;
 
   const btn = document.getElementById('print-btn');
-  btn.disabled = true;
-  btn.textContent = 'GENERATING…';
+  setButtonDisabled(btn, true);
+  setButtonLabel(btn, 'GENERATING...');
 
   try {
     const pdfBytes = await generateInsertPdf(config, formData, logoDataUrl);
@@ -120,8 +169,8 @@ document.getElementById('print-btn').addEventListener('click', async () => {
     errEl.textContent = `Error: ${err.message}`;
     errEl.hidden = false;
   } finally {
-    btn.disabled = false;
-    btn.textContent = '⎙ PRINT';
+    setButtonDisabled(btn, false);
+    setButtonLabel(btn, 'PRINT');
     updateDownloadBtn();
   }
 });
@@ -232,11 +281,20 @@ function addListItem(list, value = '', maxItems, addBtnId) {
   const row = document.createElement('div');
   row.className = 'dynamic-list-item';
 
+  const inputShell = document.createElement('hl-input');
+  inputShell.setAttribute('density', 'compact');
+
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'field-input';
   input.value = value;
   input.maxLength = 100;
+
+  inputShell.appendChild(input);
+
+  const removeShell = document.createElement('hl-btn');
+  removeShell.setAttribute('variant', 'ghost');
+  removeShell.setAttribute('size', 'sm');
 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
@@ -248,15 +306,19 @@ function addListItem(list, value = '', maxItems, addBtnId) {
     updateAddButton(list, maxItems, addBtnId);
   });
 
-  row.appendChild(input);
-  row.appendChild(removeBtn);
+  removeShell.appendChild(removeBtn);
+  row.appendChild(inputShell);
+  row.appendChild(removeShell);
   list.appendChild(row);
   updateAddButton(list, maxItems, addBtnId);
 }
 
 function updateAddButton(list, maxItems, addBtnId) {
   const btn = document.getElementById(addBtnId);
-  if (btn) btn.hidden = list.children.length >= maxItems;
+  if (!btn) return;
+  const hidden = list.children.length >= maxItems;
+  btn.hidden = hidden;
+  btn.closest('hl-btn')?.toggleAttribute('hidden', hidden);
 }
 
 function getListValues(listId) {
@@ -374,5 +436,6 @@ document.getElementById('reset-btn').addEventListener('click', () => {
 });
 
 // ── Init ──────────────────────────────────────────────────────────
+applyTheme(getStoredTheme());
 updatePreview();
 updateDownloadBtn();
