@@ -42,4 +42,6 @@ Data flow:
 - `config.js` is the single source of truth for the config schema and validation rules. Thermal color warnings, page dimension limits, tagline limits, and footer limits are enforced there.
 - The `{platform}` token in footer lines is replaced at render time in both `pdf-generator.js` and `preview.js`.
 - Logo images are stored as base64 data URLs in localStorage under `insertgen_logo`, separate from config JSON to avoid size issues.
-- Output format is a 4 x 6 inch thermal-printable PDF using Courier fonts and minimum 1.2 pt line weights. pdf-lib is the only production dependency.
+- Output format is a 4 x 6 inch thermal-printable PDF using Courier fonts and minimum 1.2 pt line weights. pdf-lib is the only production dependency for PDF generation.
+- The app shell UI uses `@ajustinjames/hardline-components`, `@ajustinjames/hardline-tokens`, and `lucide` as production dependencies for layout, theming, and icons. New UI dependencies are acceptable when they serve the app shell; PDF generation must remain pdf-lib only.
+- New behavior in `app.js` (e.g. theme toggling, button state helpers, dynamic list management) should be covered by tests alongside the existing config/pdf-generator suites.
