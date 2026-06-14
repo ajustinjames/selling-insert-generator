@@ -12,8 +12,8 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@ajustinjames/hardline-components": "^0.0.4",
-    "@ajustinjames/hardline-tokens": "^0.0.4",
+    "@ajustinjames/hardline-components": "^0.0.5",
+    "@ajustinjames/hardline-tokens": "^0.0.5",
     "lucide": "^1.17.0",
     "pdf-lib": "^1.17.1"
   },
