@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { generateInsertPdf } from '../src/pdf-generator.js';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { generateInsertPdf, triggerDownload } from '../src/pdf-generator.js';
 import { DEFAULT_CONFIG } from '../src/config.js';
 
 const BASE_FORM = { item_name: 'Test Item', order_number: '', buyer_name: '', custom_note: '' };
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+  delete globalThis.document;
+});
 
 describe('generateInsertPdf', () => {
   it('returns a non-empty Uint8Array', async () => {
@@ -67,5 +73,59 @@ describe('generateInsertPdf', () => {
     }, null);
     // More content = more bytes
     expect(withFields.length).toBeGreaterThanOrEqual(minimal.length);
+  });
+});
+
+describe('triggerDownload', () => {
+  it('clicks an attached PDF download link before revoking the blob URL', () => {
+    vi.useFakeTimers();
+
+    const appended = [];
+    const clicked = [];
+    const anchor = {
+      href: '',
+      download: '',
+      style: {},
+      attached: false,
+      click: vi.fn(() => {
+        clicked.push({
+          href: anchor.href,
+          download: anchor.download,
+          attached: anchor.attached,
+        });
+      }),
+      remove: vi.fn(() => {
+        anchor.attached = false;
+      }),
+    };
+
+    globalThis.document = {
+      body: {
+        appendChild: vi.fn(el => {
+          el.attached = true;
+          appended.push(el);
+        }),
+      },
+      createElement: vi.fn(() => anchor),
+    };
+
+    const createObjectURL = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:insert-pdf');
+    const revokeObjectURL = vi.spyOn(globalThis.URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    triggerDownload(new Uint8Array([0x25, 0x50, 0x44, 0x46]), 'insert_test_item.pdf');
+
+    expect(createObjectURL.mock.calls[0][0]).toBeInstanceOf(globalThis.Blob);
+    expect(createObjectURL.mock.calls[0][0].type).toBe('application/pdf');
+    expect(appended).toEqual([anchor]);
+    expect(clicked).toEqual([{
+      href: 'blob:insert-pdf',
+      download: 'insert_test_item.pdf',
+      attached: true,
+    }]);
+    expect(anchor.remove).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    vi.runAllTimers();
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:insert-pdf');
   });
 });
